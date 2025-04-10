@@ -100,19 +100,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return await res.json();
     },
     onSuccess: (user: User) => {
+      console.log("Login mutation success, setting user data:", user);
       queryClient.setQueryData(["/api/user"], user);
       
-      // Redirect based on user type
-      if (user.userType === "salon_owner") {
-        navigate("/owner/dashboard");
-      } else {
-        navigate("/");
-      }
-      
+      // Show toast first
       toast({
         title: "تم تسجيل الدخول بنجاح",
         description: `مرحباً ${user.fullName}`,
       });
+      
+      // Use direct page load for more reliable session handling
+      setTimeout(() => {
+        console.log("Redirecting after login to appropriate page");
+        // Redirect based on user type
+        if (user.userType === "salon_owner") {
+          window.location.href = "/owner/dashboard";
+        } else {
+          window.location.href = "/";
+        }
+      }, 500); // Brief delay to ensure toast is shown
     },
     onError: (error: Error) => {
       toast({
@@ -142,17 +148,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("Registration mutation success, setting user data");
       queryClient.setQueryData(["/api/user"], user);
       
-      // Redirect based on user type
-      if (user.userType === "salon_owner") {
-        navigate("/owner/dashboard");
-      } else {
-        navigate("/");
-      }
-      
+      // Show toast first
       toast({
         title: "تم إنشاء الحساب بنجاح",
         description: `مرحباً ${user.fullName}`,
       });
+      
+      // Use direct page load for more reliable session handling
+      setTimeout(() => {
+        console.log("Redirecting after registration to appropriate page");
+        // Redirect based on user type
+        if (user.userType === "salon_owner") {
+          window.location.href = "/owner/dashboard";
+        } else {
+          window.location.href = "/";
+        }
+      }, 500); // Brief delay to ensure toast is shown
     },
     onError: (error: Error) => {
       console.error("Registration mutation error:", error);
@@ -169,12 +180,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiRequest("POST", "/api/logout");
     },
     onSuccess: () => {
+      console.log("Logout successful, clearing user data");
       queryClient.setQueryData(["/api/user"], null);
-      navigate("/auth");
       
       toast({
         title: "تم تسجيل الخروج بنجاح",
       });
+      
+      // Use direct page load for more reliable session handling
+      setTimeout(() => {
+        console.log("Redirecting to login page after logout");
+        window.location.href = "/auth";
+      }, 500); // Brief delay to ensure toast is shown
     },
     onError: (error: Error) => {
       toast({
