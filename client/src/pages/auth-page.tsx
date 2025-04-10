@@ -72,23 +72,19 @@ export default function AuthPage() {
     }
   }, [user, navigate]);
 
-  const onLoginSubmit = (data: LoginFormValues) => {
+  const onLoginSubmit = async (data: LoginFormValues) => {
     console.log("Login form submitted:", data);
-
-    loginMutation.mutate(data, {
-      onSuccess: (responseData) => {
-        console.log("Login successful:", responseData);
-        window.location.href = responseData.userType === "salon_owner" ? "/owner/dashboard" : "/";
-      },
-      onError: (error) => {
-        console.error("Login error:", error);
-        toast({
-          title: "خطأ في تسجيل الدخول",
-          description: error.message,
-          variant: "destructive"
-        });
-      }
-    });
+    try {
+      await loginMutation.mutateAsync(data);
+      // Success is handled by the mutation's onSuccess callback in use-auth.tsx
+    } catch (error) {
+      console.error("Login error:", error);
+      toast({
+        title: "خطأ في تسجيل الدخول", 
+        description: "فشل تسجيل الدخول. يرجى التحقق من اسم المستخدم وكلمة المرور",
+        variant: "destructive"
+      });
+    }
   };
 
   const onRegisterSubmit = (data: RegisterFormValues) => {
