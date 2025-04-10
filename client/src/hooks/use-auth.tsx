@@ -84,7 +84,7 @@ export const AuthContext = createContext<AuthContextType>(defaultContext as Auth
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [_, navigate] = useLocation();
-  
+
   const {
     data: user,
     error,
@@ -92,6 +92,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = useQuery<User | null>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
+    // Added:  Refetch only on window focus to reduce unnecessary calls.
+    refetchOnWindowFocus: false,
   });
 
   const loginMutation = useMutation({
@@ -102,13 +104,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: (user: User) => {
       console.log("Login mutation success, setting user data:", user);
       queryClient.setQueryData(["/api/user"], user);
-      
+
       // Show toast first
       toast({
         title: "تم تسجيل الدخول بنجاح",
         description: `مرحباً ${user.fullName}`,
       });
-      
+
       // Use direct page load for more reliable session handling
       setTimeout(() => {
         console.log("Redirecting after login to appropriate page");
@@ -147,13 +149,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: (user: User) => {
       console.log("Registration mutation success, setting user data");
       queryClient.setQueryData(["/api/user"], user);
-      
+
       // Show toast first
       toast({
         title: "تم إنشاء الحساب بنجاح",
         description: `مرحباً ${user.fullName}`,
       });
-      
+
       // Use direct page load for more reliable session handling
       setTimeout(() => {
         console.log("Redirecting after registration to appropriate page");
@@ -182,11 +184,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: () => {
       console.log("Logout successful, clearing user data");
       queryClient.setQueryData(["/api/user"], null);
-      
+
       toast({
         title: "تم تسجيل الخروج بنجاح",
       });
-      
+
       // Use direct page load for more reliable session handling
       setTimeout(() => {
         console.log("Redirecting to login page after logout");
