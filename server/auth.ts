@@ -24,10 +24,27 @@ async function hashPassword(password: string) {
 }
 
 async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
-  const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  console.log("Comparing passwords, supplied length:", supplied.length);
+  console.log("Stored password hash:", stored);
+  
+  try {
+    const [hashed, salt] = stored.split(".");
+    console.log("Extracted hash and salt:", { hashedLength: hashed.length, saltLength: salt.length });
+    
+    const hashedBuf = Buffer.from(hashed, "hex");
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    
+    // Debug info - hash the supplied password with the stored salt
+    console.log("Supplied password hash buffer length:", suppliedBuf.length);
+    console.log("Stored password hash buffer length:", hashedBuf.length);
+    
+    const result = timingSafeEqual(hashedBuf, suppliedBuf);
+    console.log("Password comparison result:", result);
+    return result;
+  } catch (error) {
+    console.error("Error comparing passwords:", error);
+    return false;
+  }
 }
 
 export function setupAuth(app: Express) {
