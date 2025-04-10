@@ -161,29 +161,35 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", (req, res, next) => {
-    passport.authenticate('local', (err, user, info) => {
-      if (err) {
-        console.error("Authentication error:", err);
-        return res.status(500).json({ message: "Internal server error" });
-      }
+  app.post("/api/login", async (req, res, next) => {
+    try {
+      console.log("Login attempt for:", req.body.username);
+      const user = await storage.getUserByUsername(req.body.username);
       
       if (!user) {
-        console.log("Login failed:", info?.message || "Invalid credentials");
-        return res.status(401).json({ message: "Invalid username or password" });
+        console.log("User not found:", req.body.username);
+        return res.status(401).json({ message: "المستخدم غير موجود" });
+      }
+
+      const isValidPassword = await comparePasswords(req.body.password, user.password);
+      if (!isValidPassword) {
+        console.log("Invalid password for user:", req.body.username);
+        return res.status(401).json({ message: "كلمة المرور غير صحيحة" });
       }
 
       req.login(user, (loginErr) => {
         if (loginErr) {
           console.error("Session creation error:", loginErr);
-          return res.status(500).json({ message: "Failed to create session" });
+          return res.status(500).json({ message: "خطأ في إنشاء الجلسة" });
         }
-        
         console.log("Login successful for user:", user.username);
         const { password, ...safeUser } = user;
         res.status(200).json(safeUser);
       });
-    })(req, res, next);
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "حدث خطأ في تسجيل الدخول" });
+    }
   });
 
   app.post("/api/logout", (req, res, next) => {
