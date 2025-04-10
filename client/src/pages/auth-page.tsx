@@ -63,20 +63,15 @@ export default function AuthPage() {
   
   // If user is already logged in, redirect based on user type
   useEffect(() => {
-    // Check for authentication from react-query state
     if (user) {
-      console.log("User is already authenticated from auth context, redirecting to appropriate dashboard");
+      console.log("User is already authenticated, redirecting to appropriate dashboard");
       if (user.userType === "salon_owner") {
         navigate("/owner/dashboard");
       } else {
         navigate("/");
       }
     }
-  }, [user, navigate]);
-  
-  // Also check on component mount with direct API call
-  useEffect(() => {
-    const checkAuthStatus = async () => {
+  }, [user, navigate]); => {
       try {
         // Direct fetch to verify auth status
         const response = await fetch('/api/user', {
