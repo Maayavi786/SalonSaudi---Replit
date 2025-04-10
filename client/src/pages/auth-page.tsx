@@ -81,14 +81,47 @@ export default function AuthPage() {
       .then(res => res.json())
       .then(testData => {
         console.log("API test successful:", testData);
-        // Now proceed with registration
-        console.log("Calling registerMutation.mutate with data");
-        try {
-          registerMutation.mutate(data);
-          console.log("Registration mutation called successfully");
-        } catch (error) {
-          console.error("Registration mutation error:", error);
-        }
+        
+        // Try direct fetch first (bypassing the mutation to debug)
+        console.log("Trying direct fetch to /api/register");
+        fetch("/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+          credentials: "include"
+        })
+        .then(res => {
+          console.log("Direct register fetch response status:", res.status);
+          return res.json();
+        })
+        .then(responseData => {
+          console.log("Direct register fetch response data:", responseData);
+          if (responseData && !responseData.message) {
+            console.log("Registration successful via direct fetch");
+            // Refresh page to apply login
+            window.location.href = "/";
+          } else {
+            // Fall back to the mutation approach
+            console.log("Direct fetch didn't return user data, trying mutation");
+            try {
+              registerMutation.mutate(data);
+              console.log("Registration mutation called successfully");
+            } catch (error) {
+              console.error("Registration mutation error:", error);
+            }
+          }
+        })
+        .catch(error => {
+          console.error("Direct register fetch error:", error);
+          // Fall back to the mutation
+          console.log("Falling back to mutation after direct fetch error");
+          try {
+            registerMutation.mutate(data);
+            console.log("Registration mutation called successfully");
+          } catch (mutError) {
+            console.error("Registration mutation error after fetch failure:", mutError);
+          }
+        });
       })
       .catch(error => {
         console.error("API test failed:", error);
