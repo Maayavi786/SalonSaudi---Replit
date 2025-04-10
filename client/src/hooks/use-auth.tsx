@@ -114,16 +114,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: `مرحباً ${user.fullName}`,
       });
 
-      // Use direct page load for more reliable session handling
-      setTimeout(() => {
-        console.log("Redirecting after login to appropriate page");
-        // Redirect based on user type
-        if (user.userType === "salon_owner") {
-          window.location.href = "/owner/dashboard";
-        } else {
-          window.location.href = "/";
-        }
-      }, 500); // Brief delay to ensure toast is shown
+      console.log("Redirecting after login to appropriate page");
+      // Redirect based on user type
+      if (user.userType === "salon_owner") {
+        navigate("/owner/dashboard");
+      } else {
+        navigate("/");
+      }
     },
     onError: (error: Error) => {
       toast({
