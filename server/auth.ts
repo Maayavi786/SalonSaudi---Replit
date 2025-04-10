@@ -188,7 +188,10 @@ export function setupAuth(app: Express) {
         const { password, ...safeUser } = user;
         res.status(200).json(safeUser);
       });
-    })(req, res, next);
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Login failed", error: error.message });
+    }
   });
 
   app.post("/api/logout", (req, res, next) => {
