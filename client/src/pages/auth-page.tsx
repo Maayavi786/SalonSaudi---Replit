@@ -37,7 +37,7 @@ export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<string>("login");
   const { user, loginMutation, registerMutation } = useAuth();
   const [_, navigate] = useLocation();
-  
+
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -45,7 +45,7 @@ export default function AuthPage() {
       password: "",
     }
   });
-  
+
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -60,18 +60,21 @@ export default function AuthPage() {
       prefersFemaleStaff: false,
     }
   });
-  
+
   // If user is already logged in, redirect based on user type
   useEffect(() => {
     if (user) {
       console.log("User is already authenticated, redirecting to appropriate dashboard");
-      if (user.userType === "salon_owner") {
-        navigate("/owner/dashboard");
-      } else {
-        navigate("/");
-      }
+      // Use timeout to ensure state is stable
+      setTimeout(() => {
+        if (user.userType === "salon_owner") {
+          window.location.href = "/owner/dashboard";
+        } else {
+          window.location.href = "/";
+        }
+      }, 100);
     }
-  }, [user, navigate]);
+  }, [user]);
 
   useEffect(() => {
     const checkAuthStatus = async () => {
@@ -80,7 +83,7 @@ export default function AuthPage() {
         const response = await fetch('/api/user', {
           credentials: 'include'
         });
-        
+
         if (response.ok) {
           const userData = await response.json();
           console.log("Direct auth check: User is authenticated:", userData);
@@ -99,13 +102,13 @@ export default function AuthPage() {
         console.error("Error checking auth status:", error);
       }
     };
-    
+
     checkAuthStatus();
   }, []);
-  
+
   const onLoginSubmit = (data: LoginFormValues) => {
     console.log("Login form submitted:", data);
-    
+
     loginMutation.mutate(data, {
       onSuccess: (responseData) => {
         console.log("Login successful:", responseData);
@@ -121,16 +124,16 @@ export default function AuthPage() {
       }
     });
   };
-  
+
   const onRegisterSubmit = (data: RegisterFormValues) => {
     console.log("Register form submitted:", data);
-    
+
     // First try a test API call to verify the connection
     fetch("/api/test")
       .then(res => res.json())
       .then(testData => {
         console.log("API test successful:", testData);
-        
+
         // Try direct fetch first (bypassing the mutation to debug)
         console.log("Trying direct fetch to /api/register");
         fetch("/api/register", {
@@ -183,7 +186,7 @@ export default function AuthPage() {
         }
       });
   };
-  
+
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Hero Section */}
@@ -192,7 +195,7 @@ export default function AuthPage() {
           <h1 className="text-4xl font-almarai font-bold mb-2">جمالكِ</h1>
           <p className="text-white/90 text-lg">منصة الصالونات النسائية في المملكة</p>
         </div>
-        
+
         <div className="w-full max-w-md bg-white/20 p-4 rounded-xl backdrop-blur-sm">
           <img 
             src="https://images.unsplash.com/photo-1470259078422-826894b933aa?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" 
@@ -203,7 +206,7 @@ export default function AuthPage() {
           <p className="opacity-90">تصفحي واحجزي خدمات صالونات التجميل النسائية في منطقتك بسهولة وأمان تام.</p>
         </div>
       </div>
-      
+
       {/* Form Section */}
       <div className="p-6 flex items-center justify-center flex-1 md:w-1/2">
         <div className="w-full max-w-md">
@@ -212,7 +215,7 @@ export default function AuthPage() {
               <TabsTrigger value="login">تسجيل الدخول</TabsTrigger>
               <TabsTrigger value="register">إنشاء حساب</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="login">
               <Form {...loginForm}>
                 <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
@@ -229,7 +232,7 @@ export default function AuthPage() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={loginForm.control}
                     name="password"
@@ -243,7 +246,7 @@ export default function AuthPage() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <Button 
                     type="submit" 
                     className="w-full bg-primary hover:bg-primary-dark"
@@ -254,7 +257,7 @@ export default function AuthPage() {
                 </form>
               </Form>
             </TabsContent>
-            
+
             <TabsContent value="register">
               <Form {...registerForm}>
                 <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
@@ -271,7 +274,7 @@ export default function AuthPage() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={registerForm.control}
                     name="username"
@@ -285,7 +288,7 @@ export default function AuthPage() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={registerForm.control}
                     name="phone"
@@ -299,7 +302,7 @@ export default function AuthPage() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={registerForm.control}
                     name="email"
@@ -313,7 +316,7 @@ export default function AuthPage() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={registerForm.control}
                     name="password"
@@ -327,7 +330,7 @@ export default function AuthPage() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={registerForm.control}
                     name="confirmPassword"
@@ -341,7 +344,7 @@ export default function AuthPage() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={registerForm.control}
                     name="userType"
@@ -374,7 +377,7 @@ export default function AuthPage() {
                       </FormItem>
                     )}
                   />
-                  
+
                   {registerForm.watch("userType") === "customer" && (
                     <>
                       <FormField
@@ -394,7 +397,7 @@ export default function AuthPage() {
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={registerForm.control}
                         name="isPrivacyFocused"
@@ -414,7 +417,7 @@ export default function AuthPage() {
                       />
                     </>
                   )}
-                  
+
                   <Button 
                     type="submit" 
                     className="w-full bg-primary hover:bg-primary-dark"
