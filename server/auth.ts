@@ -161,17 +161,19 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", (req, res, next) => {
-    console.log("Login attempt for username:", req.body.username);
-    
-    passport.authenticate("local", (err, user, info) => {
-      if (err) {
-        console.error("Login error:", err);
-        return next(err);
-      }
+  app.post("/api/login", async (req, res, next) => {
+    try {
+      console.log("Login attempt for username:", req.body.username);
       
+      const user = await storage.getUserByUsername(req.body.username);
       if (!user) {
-        console.log("Authentication failed - invalid credentials");
+        console.log("User not found:", req.body.username);
+        return res.status(401).json({ message: "Invalid username or password" });
+      }
+
+      const isValidPassword = await comparePasswords(req.body.password, user.password);
+      if (!isValidPassword) {
+        console.log("Invalid password for user:", req.body.username);
         return res.status(401).json({ message: "Invalid username or password" });
       }
 
