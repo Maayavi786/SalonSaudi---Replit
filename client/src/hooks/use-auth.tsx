@@ -101,22 +101,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      try {
-        console.log("Sending login request...");
-        const res = await apiRequest("POST", "/api/login", credentials);
-        if (!res.ok) {
-          throw new Error("Invalid credentials");
-        }
-        const userData = await res.json();
-        console.log("Login response:", userData);
-        return userData;
-      } catch (error) {
-        console.error("Login error:", error);
-        throw error;
+      console.log("Sending login request...");
+      const res = await apiRequest("POST", "/api/login", credentials);
+      
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to login");
       }
+      
+      const userData = await res.json();
+      console.log("Login response:", userData);
+      return userData;
     },
     onSuccess: (user: User) => {
-      console.log("Login successful, updating user data");
+      console.log("Login successful, user:", user);
       queryClient.setQueryData(["/api/user"], user);
       
       toast({
@@ -124,10 +122,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: `مرحباً ${user.fullName}`,
       });
 
-      // Use window.location for a full page reload to ensure session is set
-      window.location.href = user.userType === "salon_owner" ? "/owner/dashboard" : "/";
+      // Navigate using window.location.href
+      const redirectPath = user.userType === "salon_owner" ? "/owner/dashboard" : "/";
+      window.location.href = redirectPath;
     },
     onError: (error: Error) => {
+      console.error("Login error:", error);
       toast({
         title: "فشل تسجيل الدخول",
         description: error.message,
