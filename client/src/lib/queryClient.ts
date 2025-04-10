@@ -12,10 +12,12 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  console.log(`API Request: ${method} ${url}`, data);
+  // Ensure URL starts with /api
+  const apiUrl = url.startsWith("/") ? url : `/${url}`;
+  console.log(`API Request: ${method} ${apiUrl}`, data);
   
   try {
-    const res = await fetch(url, {
+    const res = await fetch(apiUrl, {
       method,
       headers: data ? { "Content-Type": "application/json" } : {},
       body: data ? JSON.stringify(data) : undefined,
@@ -23,9 +25,22 @@ export async function apiRequest(
     });
 
     if (!res.ok) {
-      const errorText = await res.text();
-      console.error(`API Error (${res.status}):`, errorText);
-      throw new Error(errorText || res.statusText);
+      try {
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const errorJson = await res.json();
+          console.error(`API JSON Error (${res.status}):`, errorJson);
+          throw new Error(errorJson.message || res.statusText);
+        } else {
+          const errorText = await res.text();
+          console.error(`API Text Error (${res.status}):`, errorText);
+          throw new Error(errorText || res.statusText);
+        }
+      } catch (parseError) {
+        // If we can't parse the error response, just use the status text
+        console.error(`API Error (${res.status}):`, res.statusText);
+        throw new Error(`Error ${res.status}: ${res.statusText}`);
+      }
     }
     
     console.log(`API Response: ${res.status} ${res.statusText}`);

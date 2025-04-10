@@ -125,10 +125,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const registerMutation = useMutation({
     mutationFn: async (data: RegisterData) => {
-      const res = await apiRequest("POST", "/api/register", data);
-      return await res.json();
+      console.log("Sending registration API request with data:", { ...data, password: "[REDACTED]" });
+      try {
+        // Remove confirmPassword as it's not part of the backend schema
+        const { confirmPassword, ...userData } = data;
+        const res = await apiRequest("POST", "/api/register", userData);
+        console.log("Registration API response received");
+        const jsonData = await res.json();
+        console.log("Registration successful, user data:", jsonData);
+        return jsonData;
+      } catch (error) {
+        console.error("Registration API error:", error);
+        throw error;
+      }
     },
     onSuccess: (user: User) => {
+      console.log("Registration mutation success, setting user data");
       queryClient.setQueryData(["/api/user"], user);
       
       // Redirect based on user type
@@ -144,6 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
     onError: (error: Error) => {
+      console.error("Registration mutation error:", error);
       toast({
         title: "فشل إنشاء الحساب",
         description: error.message,
