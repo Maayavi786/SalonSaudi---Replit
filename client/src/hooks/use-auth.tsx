@@ -127,9 +127,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutationFn: async (data: RegisterData) => {
       console.log("Sending registration API request with data:", { ...data, password: "[REDACTED]" });
       try {
-        // Remove confirmPassword as it's not part of the backend schema
-        const { confirmPassword, ...userData } = data;
-        const res = await apiRequest("POST", "/api/register", userData);
+        // The server expects confirmPassword, so we need to keep it in the request
+        const res = await apiRequest("POST", "/api/register", data);
         console.log("Registration API response received");
         const jsonData = await res.json();
         console.log("Registration successful, user data:", jsonData);

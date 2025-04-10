@@ -82,8 +82,10 @@ export default function AuthPage() {
       .then(testData => {
         console.log("API test successful:", testData);
         // Now proceed with registration
+        console.log("Calling registerMutation.mutate with data");
         try {
           registerMutation.mutate(data);
+          console.log("Registration mutation called successfully");
         } catch (error) {
           console.error("Registration mutation error:", error);
         }
