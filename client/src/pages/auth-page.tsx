@@ -71,7 +71,10 @@ export default function AuthPage() {
         navigate("/");
       }
     }
-  }, [user, navigate]); => {
+  }, [user, navigate]);
+
+  useEffect(() => {
+    const checkAuthStatus = async () => {
       try {
         // Direct fetch to verify auth status
         const response = await fetch('/api/user', {
