@@ -61,50 +61,16 @@ export default function AuthPage() {
     }
   });
 
-  // If user is already logged in, redirect based on user type
+  // Simple redirect based on auth state
   useEffect(() => {
     if (user) {
-      console.log("User is already authenticated, redirecting to appropriate dashboard");
-      // Use timeout to ensure state is stable
-      setTimeout(() => {
-        if (user.userType === "salon_owner") {
-          window.location.href = "/owner/dashboard";
-        } else {
-          window.location.href = "/";
-        }
-      }, 100);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        // Direct fetch to verify auth status
-        const response = await fetch('/api/user', {
-          credentials: 'include'
-        });
-
-        if (response.ok) {
-          const userData = await response.json();
-          console.log("Direct auth check: User is authenticated:", userData);
-          // Only redirect if we're not already redirecting from the other effect
-          if (!user) {
-            if (userData.userType === "salon_owner") {
-              navigate("/owner/dashboard");
-            } else {
-              navigate("/");
-            }
-          }
-        } else {
-          console.log("Direct auth check: User is not authenticated");
-        }
-      } catch (error) {
-        console.error("Error checking auth status:", error);
+      if (user.userType === "salon_owner") {
+        navigate("/owner/dashboard");
+      } else {
+        navigate("/");
       }
-    };
-
-    checkAuthStatus();
-  }, []);
+    }
+  }, [user, navigate]);
 
   const onLoginSubmit = (data: LoginFormValues) => {
     console.log("Login form submitted:", data);
