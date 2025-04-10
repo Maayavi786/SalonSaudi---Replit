@@ -108,34 +108,18 @@ export default function AuthPage() {
   const onLoginSubmit = (data: LoginFormValues) => {
     console.log("Login form submitted:", data);
     
-    // Try direct fetch first (similar to what worked for registration)
-    console.log("Trying direct fetch to /api/login");
-    fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-      credentials: "include"
-    })
-    .then(res => {
-      console.log("Direct login fetch response status:", res.status);
-      if (!res.ok) {
-        throw new Error(`Login failed with status: ${res.status}`);
-      }
-      return res.json();
-    })
-    .then(responseData => {
-      console.log("Login successful via direct fetch, user data:", responseData);
-      // Refresh page to apply login
-      window.location.href = "/";
-    })
-    .catch(error => {
-      console.error("Direct login fetch error:", error);
-      // Fall back to the mutation
-      console.log("Falling back to mutation after direct fetch error");
-      try {
-        loginMutation.mutate(data);
-      } catch (mutError) {
-        console.error("Login mutation error:", mutError);
+    loginMutation.mutate(data, {
+      onSuccess: (responseData) => {
+        console.log("Login successful:", responseData);
+        window.location.href = responseData.userType === "salon_owner" ? "/owner/dashboard" : "/";
+      },
+      onError: (error) => {
+        console.error("Login error:", error);
+        toast({
+          title: "خطأ في تسجيل الدخول",
+          description: error.message,
+          variant: "destructive"
+        });
       }
     });
   };
