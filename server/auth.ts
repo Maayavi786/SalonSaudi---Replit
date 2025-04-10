@@ -81,37 +81,64 @@ export function setupAuth(app: Express) {
 
   app.post("/api/register", async (req, res, next) => {
     try {
-      // Validate request data
-      const validatedData = registerSchema.parse(req.body);
+      console.log("Received registration request:", req.body);
       
-      // Check if username already exists
-      const existingUser = await storage.getUserByUsername(validatedData.username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Username already exists" });
-      }
+      // Validate request data
+      try {
+        const validatedData = registerSchema.parse(req.body);
+        console.log("Validation passed for registration data");
+        
+        // Check if username already exists
+        const existingUser = await storage.getUserByUsername(validatedData.username);
+        if (existingUser) {
+          console.log("Registration failed: Username already exists");
+          return res.status(400).json({ message: "Username already exists" });
+        }
 
-      // Create user with hashed password
-      const user = await storage.createUser({
-        ...validatedData,
-        password: await hashPassword(validatedData.password),
-      });
+        // Create user with hashed password
+        console.log("Creating new user...");
+        const hashedPassword = await hashPassword(validatedData.password);
+        
+        const userData = {
+          ...validatedData,
+          password: hashedPassword,
+          // Set default values for nullable fields
+          email: validatedData.email || null,
+          imageUrl: null,
+          preferredLanguage: validatedData.preferredLanguage || "ar",
+          isPrivacyFocused: validatedData.isPrivacyFocused || false,
+          prefersFemaleStaff: validatedData.prefersFemaleStaff || false
+        };
+        
+        console.log("Creating user with data:", { ...userData, password: "[REDACTED]" });
+        const user = await storage.createUser(userData);
+        console.log("User created successfully, ID:", user.id);
 
-      // Remove sensitive fields
-      const { password, ...safeUser } = user;
+        // Remove sensitive fields
+        const { password, ...safeUser } = user;
 
-      // Log in the user
-      req.login(user, (err) => {
-        if (err) return next(err);
-        res.status(201).json(safeUser);
-      });
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: "Validation error", 
-          errors: error.errors 
+        // Log in the user
+        req.login(user, (err) => {
+          if (err) {
+            console.error("Login error after registration:", err);
+            return next(err);
+          }
+          console.log("User logged in after registration");
+          res.status(201).json(safeUser);
         });
+      } catch (validationError) {
+        if (validationError instanceof z.ZodError) {
+          console.log("Registration validation error:", validationError.errors);
+          return res.status(400).json({ 
+            message: "Validation error", 
+            errors: validationError.errors 
+          });
+        }
+        throw validationError;
       }
-      res.status(500).json({ message: "Registration failed" });
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "Registration failed", error: error.message });
     }
   });
 
