@@ -13,6 +13,12 @@ import {
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Add a test endpoint to verify the API is working
+  app.get("/api/test", (req, res) => {
+    console.log("Test API endpoint hit");
+    res.json({ message: "API is working correctly", timestamp: new Date().toISOString() });
+  });
+  
   // Setup authentication routes
   setupAuth(app);
 

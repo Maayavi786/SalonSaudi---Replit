@@ -75,11 +75,29 @@ export default function AuthPage() {
   
   const onRegisterSubmit = (data: RegisterFormValues) => {
     console.log("Register form submitted:", data);
-    try {
-      registerMutation.mutate(data);
-    } catch (error) {
-      console.error("Registration error:", error);
-    }
+    
+    // First try a test API call to verify the connection
+    fetch("/api/test")
+      .then(res => res.json())
+      .then(testData => {
+        console.log("API test successful:", testData);
+        // Now proceed with registration
+        try {
+          registerMutation.mutate(data);
+        } catch (error) {
+          console.error("Registration mutation error:", error);
+        }
+      })
+      .catch(error => {
+        console.error("API test failed:", error);
+        // Try direct submission anyway
+        try {
+          console.log("Trying direct registration despite test failure");
+          registerMutation.mutate(data);
+        } catch (mutationError) {
+          console.error("Registration direct mutation error:", mutationError);
+        }
+      });
   };
   
   return (
