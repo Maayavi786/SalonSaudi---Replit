@@ -16,9 +16,10 @@ import { ProtectedRoute } from "./lib/protected-route";
 function App() {
   return (
     <>
+      {/* Auth page is a special case - always accessible but with internal redirect logic */}
+      <Route path="/auth" component={AuthPage} />
+      
       <Switch>
-        <Route path="/auth" component={AuthPage} />
-        
         {/* Customer Routes */}
         <ProtectedRoute 
           path="/" 
