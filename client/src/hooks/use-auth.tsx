@@ -93,8 +93,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     refetchOnWindowFocus: false,
-    refetchInterval: 30000, // Check auth every 30 seconds instead of continuously
-    staleTime: 30000, // Consider data fresh for 30 seconds
+    refetchInterval: false, // Disable automatic refetching
+    staleTime: Infinity, // Keep data fresh indefinitely
+    cacheTime: Infinity, // Keep data in cache indefinitely
+    retry: false, // Don't retry failed requests
   });
 
   const loginMutation = useMutation({
