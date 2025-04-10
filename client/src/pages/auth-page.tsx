@@ -75,13 +75,15 @@ export default function AuthPage() {
   const onLoginSubmit = async (data: LoginFormValues) => {
     console.log("Login form submitted:", data);
     try {
-      await loginMutation.mutateAsync(data);
-      // Success is handled by the mutation's onSuccess callback in use-auth.tsx
-    } catch (error) {
+      const result = await loginMutation.mutateAsync(data);
+      if (!result) {
+        throw new Error("No response from server");
+      }
+    } catch (error: any) {
       console.error("Login error:", error);
       toast({
         title: "خطأ في تسجيل الدخول", 
-        description: "فشل تسجيل الدخول. يرجى التحقق من اسم المستخدم وكلمة المرور",
+        description: error.message || "فشل تسجيل الدخول. يرجى التحقق من اسم المستخدم وكلمة المرور",
         variant: "destructive"
       });
     }

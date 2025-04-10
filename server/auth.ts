@@ -161,37 +161,29 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", async (req, res, next) => {
-    try {
-      console.log("Login attempt for username:", req.body.username);
-      
-      const user = await storage.getUserByUsername(req.body.username);
-      if (!user) {
-        console.log("User not found:", req.body.username);
-        return res.status(401).json({ message: "Invalid username or password" });
+  app.post("/api/login", (req, res, next) => {
+    passport.authenticate('local', (err, user, info) => {
+      if (err) {
+        console.error("Authentication error:", err);
+        return res.status(500).json({ message: "Internal server error" });
       }
-
-      const isValidPassword = await comparePasswords(req.body.password, user.password);
-      if (!isValidPassword) {
-        console.log("Invalid password for user:", req.body.username);
+      
+      if (!user) {
+        console.log("Login failed:", info?.message || "Invalid credentials");
         return res.status(401).json({ message: "Invalid username or password" });
       }
 
       req.login(user, (loginErr) => {
         if (loginErr) {
           console.error("Session creation error:", loginErr);
-          return next(loginErr);
+          return res.status(500).json({ message: "Failed to create session" });
         }
         
         console.log("Login successful for user:", user.username);
-        // Remove sensitive fields
         const { password, ...safeUser } = user;
         res.status(200).json(safeUser);
       });
-    } catch (error) {
-      console.error("Login error:", error);
-      res.status(500).json({ message: "Login failed", error: error.message });
-    }
+    })(req, res, next);
   });
 
   app.post("/api/logout", (req, res, next) => {
