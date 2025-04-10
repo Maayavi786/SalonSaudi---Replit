@@ -101,26 +101,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
-      return await res.json();
+      try {
+        console.log("Sending login request...");
+        const res = await apiRequest("POST", "/api/login", credentials);
+        if (!res.ok) {
+          throw new Error("Invalid credentials");
+        }
+        const userData = await res.json();
+        console.log("Login response:", userData);
+        return userData;
+      } catch (error) {
+        console.error("Login error:", error);
+        throw error;
+      }
     },
     onSuccess: (user: User) => {
-      console.log("Login mutation success, setting user data:", user);
+      console.log("Login successful, updating user data");
       queryClient.setQueryData(["/api/user"], user);
-
-      // Show toast first
+      
       toast({
         title: "تم تسجيل الدخول بنجاح",
         description: `مرحباً ${user.fullName}`,
       });
 
-      console.log("Redirecting after login to appropriate page");
-      // Redirect based on user type
-      if (user.userType === "salon_owner") {
-        navigate("/owner/dashboard");
-      } else {
-        navigate("/");
-      }
+      // Use window.location for a full page reload to ensure session is set
+      window.location.href = user.userType === "salon_owner" ? "/owner/dashboard" : "/";
     },
     onError: (error: Error) => {
       toast({
